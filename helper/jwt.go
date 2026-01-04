@@ -1,4 +1,4 @@
-package auth
+package helper
 
 import (
 	"Be-Book-Padel/models"
@@ -11,7 +11,7 @@ var jwtSecret = []byte("absaBA222@")
 
 func GenerateAccessToken(userID uint, role models.UserRole) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": userID,
+		"user_id": uint(userID),
 		"role":    role,
 		"exp":     time.Now().Add(15 * time.Minute).Unix(),
 	}

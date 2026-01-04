@@ -1,7 +1,7 @@
 package user
 
 import (
-	"Be-Book-Padel/internal/database"
+	"Be-Book-Padel/database"
 	"Be-Book-Padel/models"
 )
 
@@ -19,6 +19,16 @@ func (r *UserRepository) FindByEmail(email string) (*models.Users, error) {
 	var user models.Users
 	result := database.DB.Where("email = ?", email).First(&user)
 	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &user, nil
+}
+
+func (r *UserRepository) FindByID(id uint) (*models.Users, error){
+	var user models.Users
+	result := database.DB.First(&user, id)
+	if result.Error != nil{
 		return nil, result.Error
 	}
 

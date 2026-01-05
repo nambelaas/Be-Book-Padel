@@ -9,5 +9,5 @@ type RefreshToken struct {
 	ExpiresAt time.Time `gorm:"timestamptz" json:"expires_at"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
-	User      Users     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;" json:"user"`
+	User      Users     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"user"`
 }

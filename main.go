@@ -3,7 +3,6 @@ package main
 import (
 	"Be-Book-Padel/config"
 	"Be-Book-Padel/database"
-	"Be-Book-Padel/models"
 	"Be-Book-Padel/routes"
 
 	"github.com/gin-gonic/gin"
@@ -13,10 +12,6 @@ import (
 func main() {
 	config.LoadConfig()
 	database.ConnectDB()
-
-	// migrate database
-	database.DB.AutoMigrate(&models.Users{})
-	database.DB.AutoMigrate(&models.RefreshToken{})
 
 	r := gin.Default()
 	routes.InitRoutes(r)

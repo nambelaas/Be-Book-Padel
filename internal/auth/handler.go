@@ -14,7 +14,7 @@ import (
 var (
 	UserRepository         = user.UserRepository{}
 	RefreshTokenRepository = refreshtoken.RefreshTokenRepository{}
-	AuthService           = authServices.NewAuthService{
+	AuthService            = authServices.NewAuthService{
 		UserRepo:         UserRepository,
 		RefreshTokenRepo: RefreshTokenRepository,
 	}
@@ -39,6 +39,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "invalid request"})
+		return
 	}
 
 	userModel := &models.Users{
@@ -49,16 +50,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Gender:    req.Gender,
 	}
 
-	accessToken, refreshToken, err := AuthService.Register(userModel)
+	err := AuthService.Register(userModel)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(201, gin.H{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
-		"message":       "user registered successfully",
+		"message": "user registered successfully",
 	})
 }
 
@@ -92,6 +91,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "invalid request"})
+		return
 	}
 
 	accessToken, refreshToken, err := AuthService.RefreshToken(req.RefreshToken)
@@ -103,5 +103,73 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
+	})
+}
+
+func (h *AuthHandler) RegisterStaff(c *gin.Context) {
+	var req struct {
+		FirstName string `json:"first_name" binding:"required`
+		LastName  string `json:"last_name" binding:"required"`
+		Email     string `json:"email" binding:"required,email"`
+		Password  string `json:"password" binding:"required,min=6"`
+		Gender    string `json:"gender" binding:"required"`
+	}
+
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "invalid request"})
+		return
+	}
+
+	userModel := &models.Users{
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		Password:  req.Password,
+		Gender:    req.Gender,
+		Role:      models.Staff,
+	}
+
+	err := AuthService.Register(userModel)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(201, gin.H{
+		"message": "user registered successfully",
+	})
+}
+
+func (h *AuthHandler) RegisterAdmin(c *gin.Context) {
+	var req struct {
+		FirstName string `json:"first_name" binding:"required`
+		LastName  string `json:"last_name" binding:"required"`
+		Email     string `json:"email" binding:"required,email"`
+		Password  string `json:"password" binding:"required,min=6"`
+		Gender    string `json:"gender" binding:"required"`
+	}
+
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "invalid request"})
+		return
+	}
+
+	userModel := &models.Users{
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		Password:  req.Password,
+		Gender:    req.Gender,
+		Role:      models.Admin,
+	}
+
+	err := AuthService.Register(userModel)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(201, gin.H{
+		"message": "user registered successfully",
 	})
 }

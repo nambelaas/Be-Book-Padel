@@ -5,9 +5,17 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/spf13/viper"
 )
 
-var jwtSecret = []byte("absaBA222@")
+var jwtSecret = []byte(viper.GetString("JWT_SECRET"))
+
+type JwtData struct {
+	jwt.RegisteredClaims
+	UserId uint
+	Name   string
+	Role   string
+}
 
 func GenerateAccessToken(userID uint, role models.UserRole) (string, error) {
 	claims := jwt.MapClaims{
@@ -21,14 +29,19 @@ func GenerateAccessToken(userID uint, role models.UserRole) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-func ParseToken(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+func ParseToken(tokenString string) (JwtData, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &JwtData{}, func(t *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
 
 	if err != nil || !token.Valid {
-		return nil, err
+		return JwtData{}, err
 	}
 
-	return token.Claims.(jwt.MapClaims), nil
+	claims, ok := token.Claims.(*JwtData)
+	if !ok {
+		return JwtData{}, err
+	}
+
+	return *claims, nil
 }

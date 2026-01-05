@@ -18,15 +18,15 @@ func AuthService(userRepo user.UserRepository, refreshTokenRepo refreshtoken.Ref
 	}
 }
 
-func (s *NewAuthService) Register(user *models.Users) (string, string, error) {
-	_, err := s.UserRepo.FindByEmail(user.Email)
-	if err != nil {
-		return "", "", errors.New("email already registered")
+func (s *NewAuthService) Register(user *models.Users) error {
+	emailExist := s.UserRepo.FindByEmail(user.Email)
+	if emailExist != nil {
+		return errors.New("email already registered")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", "", err
+		return err
 	}
 
 	user = &models.Users{
@@ -39,29 +39,16 @@ func (s *NewAuthService) Register(user *models.Users) (string, string, error) {
 
 	err = s.UserRepo.Create(user)
 	if err != nil {
-		return "", "", err
-	}
-	accessToken, _ := helper.GenerateAccessToken(user.ID, user.Role)
-	refreshToken := helper.GenerateRandomToken()
-	hashRefreshToken := helper.HashToken(refreshToken)
-
-	err = s.RefreshTokenRepo.CreateRefreshToken(&models.RefreshToken{
-		UserID:    user.ID,
-		Token:     hashRefreshToken,
-		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
-	})
-
-	if err != nil {
-		return "", "", err
+		return err
 	}
 
-	return accessToken, refreshToken, nil
+	return nil
 }
 
 func (s *NewAuthService) Login(email, password string) (string, string, error) {
-	user, err := s.UserRepo.FindByEmail(email)
-	if err != nil {
-		return "", "", err
+	user := s.UserRepo.FindByEmail(email)
+	if user == nil {
+		return "", "", errors.New("User not found")
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
@@ -72,16 +59,16 @@ func (s *NewAuthService) Login(email, password string) (string, string, error) {
 	refreshToken := helper.GenerateRandomToken()
 	hashRefreshToken := helper.HashToken(refreshToken)
 
-	err = s.RefreshTokenRepo.CreateRefreshToken(&models.RefreshToken{
+	err := s.RefreshTokenRepo.CreateRefreshToken(&models.RefreshToken{
 		UserID:    user.ID,
 		Token:     hashRefreshToken,
-		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+		ExpiresAt: time.Now().Add(30 * time.Minute),
 	})
 
 	if err != nil {
 		return "", "", err
 	}
-	return accessToken, refreshToken, nil
+	return accessToken, hashRefreshToken, nil
 }
 
 func (s *NewAuthService) RefreshToken(token string) (string, string, error) {

@@ -15,20 +15,20 @@ func (r *UserRepository) Create(user *models.Users) error {
 	return result.Error
 }
 
-func (r *UserRepository) FindByEmail(email string) (*models.Users, error) {
+func (r *UserRepository) FindByEmail(email string) *models.Users {
 	var user models.Users
 	result := database.DB.Where("email = ?", email).First(&user)
-	if result.Error != nil {
-		return nil, result.Error
+	if result.RowsAffected == 0 {
+		return nil
 	}
 
-	return &user, nil
+	return &user
 }
 
-func (r *UserRepository) FindByID(id uint) (*models.Users, error){
+func (r *UserRepository) FindByID(id uint) (*models.Users, error) {
 	var user models.Users
 	result := database.DB.First(&user, id)
-	if result.Error != nil{
+	if result.Error != nil {
 		return nil, result.Error
 	}
 

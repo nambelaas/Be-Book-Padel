@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"Be-Book-Padel/helper"
 	"errors"
 	"net/http"
 	"strings"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/spf13/viper"
 )
 
 type JwtData struct {
@@ -45,18 +45,9 @@ func CheckJwt() gin.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.ParseWithClaims(tokenString, &JwtData{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(viper.GetString("JWT.SignatureKey")), nil
-		})
-
+		claims,err := helper.ParseToken(tokenString)
 		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-
-		claims, ok := token.Claims.(*JwtData)
-		if !ok || !token.Valid {
-			c.AbortWithError(http.StatusBadRequest, err)
+			c.JSON(http.StatusInternalServerError, "Token invalid")
 			return
 		}
 
